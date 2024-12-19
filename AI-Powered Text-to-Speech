@@ -1,0 +1,47 @@
+import com.google.cloud.texttospeech.v1.*;
+import com.google.protobuf.ByteString;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+public class TextToSpeechExample {
+    
+    public static void main(String[] args) throws IOException {
+        // Set the text to be converted to speech
+        String text = "Hello, welcome to AI-powered Text-to-Speech in Java!";
+        
+        // Call the method to convert text to speech
+        textToSpeech(text);
+    }
+
+    public static void textToSpeech(String text) throws IOException {
+        // Initialize the Text-to-Speech client
+        try (TextToSpeechClient textToSpeechClient = TextToSpeechClient.create()) {
+
+            // Set the input text
+            SynthesisInput input = SynthesisInput.newBuilder().setText(text).build();
+
+            // Build the voice parameters (language code and voice gender)
+            VoiceSelectionParams voice = VoiceSelectionParams.newBuilder()
+                    .setLanguageCode("en-US") // Choose language code (English in this case)
+                    .setSsmlGender(SsmlVoiceGender.FEMALE) // Choose gender (e.g., FEMALE)
+                    .build();
+
+            // Choose the audio encoding format (e.g., MP3, WAV, etc.)
+            AudioConfig audioConfig = AudioConfig.newBuilder()
+                    .setAudioEncoding(AudioEncoding.MP3) // MP3 is a common audio format
+                    .build();
+
+            // Make the API call to synthesize speech
+            SynthesizeSpeechResponse response = textToSpeechClient.synthesizeSpeech(input, voice, audioConfig);
+
+            // Get the audio content from the response
+            ByteString audioContents = response.getAudioContent();
+
+            // Write the audio content to an MP3 file
+            try (FileOutputStream out = new FileOutputStream("output.mp3")) {
+                out.write(audioContents.toByteArray());
+                System.out.println("Audio content written to file 'output.mp3'");
+            }
+        }
+    }
+}
