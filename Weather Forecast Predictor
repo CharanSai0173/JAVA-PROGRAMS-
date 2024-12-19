@@ -1,0 +1,53 @@
+import weka.core.*;
+import weka.classifiers.trees.RandomForest;
+import weka.classifiers.Classifier;
+import weka.core.converters.ConverterUtils.DataSource;
+import weka.classifiers.Evaluation;
+import java.util.Random;
+
+public class WeatherForecastPredictor {
+
+    public static void main(String[] args) {
+        try {
+            // Load the weather dataset (make sure you replace this with your dataset path)
+            String datasetPath = "path_to_your_weather_data/weather_data.arff";  // Change this to the path of your ARFF file
+            DataSource source = new DataSource(datasetPath);
+            Instances dataset = source.getDataSet();
+            
+            // Set the class index (the target variable we are predicting - in this case, 'Temperature')
+            dataset.setClassIndex(dataset.numAttributes() - 1);  // Assuming temperature is the last column
+            
+            // Create a RandomForest classifier
+            RandomForest rf = new RandomForest();
+            
+            // Train the classifier using the weather dataset
+            rf.buildClassifier(dataset);
+            
+            // Evaluate the classifier using 10-fold cross-validation
+            Evaluation eval = new Evaluation(dataset);
+            eval.crossValidateModel(rf, dataset, 10, new Random(1));
+            
+            // Print out the evaluation results
+            System.out.println("Model Evaluation: ");
+            System.out.println(eval.toSummaryString());
+            
+            // Example: Making a prediction for a new set of weather data
+            // Suppose the new data is: humidity = 70%, windSpeed = 10 km/h, pressure = 1015 hPa
+            double[] newWeatherData = new double[dataset.numAttributes()];
+            newWeatherData[0] = 70;  // Humidity
+            newWeatherData[1] = 10;  // Wind Speed
+            newWeatherData[2] = 1015; // Pressure
+            
+            // Create a new instance for prediction
+            Instance newInstance = new DenseInstance(1.0, newWeatherData);
+            newInstance.setDataset(dataset);
+            
+            // Make a prediction for this new instance
+            double predictedTemperature = rf.classifyInstance(newInstance);
+            System.out.println("Predicted Temperature (in degrees Celsius): " + predictedTemperature);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
