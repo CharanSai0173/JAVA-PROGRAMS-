@@ -1,0 +1,56 @@
+import weka.core.*;
+import weka.classifiers.trees.RandomForest;
+import weka.classifiers.Classifier;
+import weka.core.converters.ConverterUtils.DataSource;
+import weka.classifiers.Evaluation;
+import java.util.Random;
+
+public class DiseasePrediction {
+
+    public static void main(String[] args) {
+        try {
+            // Load the dataset (e.g., Pima Indians Diabetes dataset)
+            String datasetPath = "path_to_your_dataset/diabetes.arff";  // Change this path
+            DataSource source = new DataSource(datasetPath);
+            Instances dataset = source.getDataSet();
+            
+            // Set the class index (the target variable we are predicting)
+            dataset.setClassIndex(dataset.numAttributes() - 1);
+            
+            // Create a classifier (RandomForest is a good choice for classification)
+            RandomForest rf = new RandomForest();
+            
+            // Train the classifier on the dataset
+            rf.buildClassifier(dataset);
+            
+            // Evaluate the classifier using 10-fold cross-validation
+            Evaluation eval = new Evaluation(dataset);
+            eval.crossValidateModel(rf, dataset, 10, new Random(1));
+            
+            // Print out the evaluation results
+            System.out.println("Evaluation results: ");
+            System.out.println(eval.toSummaryString());
+            
+            // Example: Making a prediction for a new patient data
+            // Suppose the new patient's data is: age = 45, BMI = 35.0, glucose = 180, etc.
+            double[] newPatientData = new double[dataset.numAttributes()];
+            newPatientData[0] = 45;  // Age
+            newPatientData[1] = 35.0; // BMI
+            newPatientData[2] = 180;  // Glucose
+            newPatientData[3] = 85;   // Blood Pressure
+            newPatientData[4] = 150;  // Insulin
+            // Add other attributes if necessary
+
+            // Convert the array into an Instance object
+            Instance newInstance = new DenseInstance(1.0, newPatientData);
+            newInstance.setDataset(dataset);
+            
+            // Make a prediction for this new instance
+            double prediction = rf.classifyInstance(newInstance);
+            System.out.println("Predicted Class (0 = No Diabetes, 1 = Diabetes): " + prediction);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
