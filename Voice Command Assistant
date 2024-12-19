@@ -1,0 +1,87 @@
+import edu.cmu.sphinx.api.Configuration;
+import edu.cmu.sphinx.api.LiveSpeechRecognizer;
+import edu.cmu.sphinx.api.SpeechResult;
+import javax.speech.*;
+import javax.speech.synthesis.*;
+import java.util.Locale;
+
+public class VoiceCommandAssistant {
+
+    private static Synthesizer synthesizer;
+
+    public static void main(String[] args) {
+        try {
+            // Initialize text-to-speech
+            initializeSpeechSynthesis();
+            
+            // Initialize speech recognizer
+            Configuration configuration = new Configuration();
+            configuration.setAcousticModelPath("resource:/edu/cmu/sphinx/models/en-us/en-us");
+            configuration.setDictionaryPath("resource:/edu/cmu/sphinx/models/en-us/cmudict-en-us.dict");
+            configuration.setLanguageModelPath("resource:/edu/cmu/sphinx/models/en-us/en-us.lm.bin");
+
+            LiveSpeechRecognizer recognizer = new LiveSpeechRecognizer(configuration);
+            
+            // Start listening to the user's speech
+            System.out.println("Listening for commands...");
+            recognizer.startRecognition(true);
+
+            while (true) {
+                // Get the speech result
+                SpeechResult result = recognizer.getResult();
+                String command = result.getHypothesis().toLowerCase();
+
+                // Respond to the recognized command
+                System.out.println("You said: " + command);
+                executeCommand(command);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Initialize text-to-speech synthesizer
+    private static void initializeSpeechSynthesis() {
+        try {
+            // Initialize speech synthesizer
+            SynthesizerModeDesc desc = new SynthesizerModeDesc(Locale.ENGLISH);
+            synthesizer = Central.createSynthesizer(desc);
+            synthesizer.allocate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Function to execute commands
+    private static void executeCommand(String command) {
+        try {
+            if (command.contains("hello")) {
+                speak("Hello, how can I assist you today?");
+            } else if (command.contains("time")) {
+                String time = java.time.LocalTime.now().toString();
+                speak("The current time is " + time);
+            } else if (command.contains("open google")) {
+                speak("Opening Google in your browser.");
+                // This will open a web browser to Google
+                Runtime.getRuntime().exec("cmd /c start https://www.google.com");
+            } else if (command.contains("stop")) {
+                speak("Goodbye! Closing the assistant.");
+                System.exit(0);
+            } else {
+                speak("Sorry, I didn't understand that command.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Function to use speech synthesis (Text-to-Speech)
+    private static void speak(String text) {
+        try {
+            synthesizer.speakPlainText(text, null);
+            synthesizer.waitEngineState(Synthesizer.QUEUE_EMPTY);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
