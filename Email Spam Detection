@@ -1,0 +1,120 @@
+import org.apache.commons.math3.distribution.NormalDistribution;
+import java.io.*;
+import java.util.*;
+import java.util.regex.*;
+import java.nio.file.*;
+
+public class SpamDetection {
+    
+    // Map to hold the word probabilities for spam and non-spam
+    private Map<String, Integer> spamWordCount = new HashMap<>();
+    private Map<String, Integer> nonSpamWordCount = new HashMap<>();
+    
+    // Count of spam and non-spam emails
+    private int spamCount = 0;
+    private int nonSpamCount = 0;
+    
+    // Total word counts in spam and non-spam emails
+    private int totalSpamWords = 0;
+    private int totalNonSpamWords = 0;
+    
+    private int totalEmails = 0;
+
+    public static void main(String[] args) {
+        SpamDetection sd = new SpamDetection();
+        sd.loadData("emails.csv");
+        sd.trainModel();
+        sd.testModel("testEmails.csv");
+    }
+
+    // Load the data from CSV and preprocess it
+    public void loadData(String filePath) {
+        try (BufferedReader br = Files.newBufferedReader(Paths.get(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                String label = data[0].trim().toLowerCase();  // "spam" or "ham"
+                String emailText = data[1].toLowerCase();   // Email content
+                
+                totalEmails++;
+                if (label.equals("spam")) {
+                    spamCount++;
+                    processEmail(emailText, true);
+                } else {
+                    nonSpamCount++;
+                    processEmail(emailText, false);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Process email and update word counts
+    public void processEmail(String emailText, boolean isSpam) {
+        String[] words = emailText.split("\\s+");
+        for (String word : words) {
+            word = word.replaceAll("[^a-zA-Z]", "").trim();
+            if (word.length() > 1) {
+                if (isSpam) {
+                    spamWordCount.put(word, spamWordCount.getOrDefault(word, 0) + 1);
+                    totalSpamWords++;
+                } else {
+                    nonSpamWordCount.put(word, nonSpamWordCount.getOrDefault(word, 0) + 1);
+                    totalNonSpamWords++;
+                }
+            }
+        }
+    }
+
+    // Train the Naive Bayes model
+    public void trainModel() {
+        System.out.println("Training model with " + totalEmails + " emails...");
+        // Normalize word counts by total words in spam or non-spam
+        // Calculate P(spam) and P(ham)
+    }
+
+    // Naive Bayes classifier for new data
+    public String classify(String emailText) {
+        String[] words = emailText.split("\\s+");
+        double spamProb = Math.log(spamCount / (double) totalEmails);
+        double nonSpamProb = Math.log(nonSpamCount / (double) totalEmails);
+
+        for (String word : words) {
+            word = word.replaceAll("[^a-zA-Z]", "").trim();
+            if (word.length() > 1) {
+                spamProb += Math.log((spamWordCount.getOrDefault(word, 0) + 1) / (double) (totalSpamWords + spamWordCount.size()));
+                nonSpamProb += Math.log((nonSpamWordCount.getOrDefault(word, 0) + 1) / (double) (totalNonSpamWords + nonSpamWordCount.size()));
+            }
+        }
+        
+        if (spamProb > nonSpamProb) {
+            return "spam";
+        } else {
+            return "ham";
+        }
+    }
+
+    // Test the model with test data
+    public void testModel(String testFilePath) {
+        try (BufferedReader br = Files.newBufferedReader(Paths.get(testFilePath))) {
+            String line;
+            int correct = 0;
+            int total = 0;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                String actualLabel = data[0].trim().toLowerCase();
+                String emailText = data[1].toLowerCase();
+                
+                String predictedLabel = classify(emailText);
+                if (predictedLabel.equals(actualLabel)) {
+                    correct++;
+                }
+                total++;
+            }
+            System.out.println("Accuracy: " + (correct / (double) total) * 100 + "%");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
