@@ -1,0 +1,115 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.*;
+
+public class SelfDrivingCarSimulation {
+
+    // Define constants for the grid size and car size
+    static final int GRID_SIZE = 500;
+    static final int CAR_SIZE = 20;
+    static final int OBSTACLE_SIZE = 30;
+    static final int TARGET_SIZE = 15;
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Self-Driving Car Simulation");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(GRID_SIZE, GRID_SIZE);
+        
+        SimulationPanel panel = new SimulationPanel();
+        frame.add(panel);
+        frame.setVisible(true);
+        panel.startSimulation();
+    }
+
+    // Simulation Panel for handling drawing and logic
+    static class SimulationPanel extends JPanel {
+        private int carX = 50; // Car starting position
+        private int carY = 50;
+        private int targetX = 450; // Target position
+        private int targetY = 450;
+        private ArrayList<Rectangle> obstacles = new ArrayList<>();
+        
+        private Timer timer;
+        
+        public SimulationPanel() {
+            // Add some random obstacles
+            for (int i = 0; i < 5; i++) {
+                int x = (int)(Math.random() * (GRID_SIZE - OBSTACLE_SIZE));
+                int y = (int)(Math.random() * (GRID_SIZE - OBSTACLE_SIZE));
+                obstacles.add(new Rectangle(x, y, OBSTACLE_SIZE, OBSTACLE_SIZE));
+            }
+
+            // Timer for updating the simulation every 50ms
+            timer = new Timer(50, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    moveCar();
+                    repaint();
+                }
+            });
+        }
+
+        // Start the simulation
+        public void startSimulation() {
+            timer.start();
+        }
+
+        // Move the car using simple AI logic (towards target, avoiding obstacles)
+        public void moveCar() {
+            int dx = targetX - carX;
+            int dy = targetY - carY;
+
+            // Normalize the movement direction (avoid diagonal movement issues)
+            double distance = Math.sqrt(dx * dx + dy * dy);
+            double moveX = (dx / distance) * 5;  // Car moves in the X direction
+            double moveY = (dy / distance) * 5;  // Car moves in the Y direction
+
+            // Update the car's position
+            carX += moveX;
+            carY += moveY;
+
+            // Avoid obstacles by checking proximity
+            for (Rectangle obstacle : obstacles) {
+                if (obstacle.contains(carX, carY)) {
+                    carX -= moveX;  // Revert move
+                    carY -= moveY;  // Revert move
+                    avoidObstacle(obstacle);
+                    break;
+                }
+            }
+        }
+
+        // Simple logic to avoid obstacles by moving the car around them
+        private void avoidObstacle(Rectangle obstacle) {
+            // Move the car in a random direction to avoid collision (this is basic avoidance)
+            carX += (Math.random() > 0.5 ? 10 : -10); // Random left or right
+            carY += (Math.random() > 0.5 ? 10 : -10); // Random up or down
+        }
+
+        // Paint the grid, car, obstacles, and target
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            Graphics2D g2d = (Graphics2D) g;
+
+            // Set grid color and draw the grid
+            g2d.setColor(Color.LIGHT_GRAY);
+            g2d.fillRect(0, 0, GRID_SIZE, GRID_SIZE);
+
+            // Draw obstacles
+            g2d.setColor(Color.RED);
+            for (Rectangle obstacle : obstacles) {
+                g2d.fill(obstacle);
+            }
+
+            // Draw the target (goal)
+            g2d.setColor(Color.GREEN);
+            g2d.fillOval(targetX, targetY, TARGET_SIZE, TARGET_SIZE);
+
+            // Draw the car
+            g2d.setColor(Color.BLUE);
+            g2d.fillRect(carX, carY, CAR_SIZE, CAR_SIZE);
+        }
+    }
+}
