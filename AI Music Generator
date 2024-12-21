@@ -1,0 +1,51 @@
+import javax.sound.midi.*;
+import java.util.Random;
+
+public class MusicGenerator {
+
+    public static void main(String[] args) throws Exception {
+        // Create a MIDI sequence player
+        Sequencer sequencer = MidiSystem.getSequencer();
+        sequencer.open();
+
+        // Create a sequence for the music
+        Sequence sequence = new Sequence(Sequence.PPQ, 4);
+
+        // Create a track to hold the music notes
+        Track track = sequence.createTrack();
+
+        // Set the instrument (e.g., Acoustic Grand Piano)
+        MidiChannel[] midiChannels = MidiSystem.getSynthesizer().getChannels();
+        MidiChannel channel = midiChannels[0];
+
+        // Create a random note generator
+        Random rand = new Random();
+
+        // Generate a simple melody of 16 random notes
+        for (int i = 0; i < 16; i++) {
+            int note = rand.nextInt(12) + 60; // Notes between 60 (Middle C) and 72 (C one octave above)
+            int duration = 300; // Duration of the note (in milliseconds)
+
+            // Add the note on event
+            ShortMessage noteOn = new ShortMessage();
+            noteOn.setMessage(ShortMessage.NOTE_ON, 0, note, 100);  // 100 is the velocity (loudness)
+            track.add(new MidiEvent(noteOn, i * 4));  // Set the time position for the note
+
+            // Add the note off event
+            ShortMessage noteOff = new ShortMessage();
+            noteOff.setMessage(ShortMessage.NOTE_OFF, 0, note, 100);
+            track.add(new MidiEvent(noteOff, (i * 4) + 4));  // Note ends after 4 ticks
+        }
+
+        // Set the sequence to the sequencer and start playing
+        sequencer.setSequence(sequence);
+        sequencer.start();
+
+        // Wait until the music finishes playing
+        while (sequencer.isRunning()) {
+            Thread.sleep(100); // Sleep while the music is playing
+        }
+
+        sequencer.close();
+    }
+}
