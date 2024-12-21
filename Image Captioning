@@ -1,0 +1,88 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
+import java.util.List;
+import java.util.Arrays;
+
+public class ImageCaptioning {
+    
+    public static void main(String[] args) {
+        // Load an image
+        String imagePath = "example_image.jpg"; // Change this to your image path
+        BufferedImage image = loadImage(imagePath);
+
+        if (image != null) {
+            // Simulate image feature extraction (basic objects)
+            List<String> detectedObjects = extractImageFeatures(image);
+
+            // Generate a caption based on detected features
+            String caption = generateCaption(detectedObjects);
+
+            // Display the image and the generated caption
+            displayImageWithCaption(image, caption);
+        }
+    }
+
+    // Load an image from the file system
+    public static BufferedImage loadImage(String imagePath) {
+        try {
+            return ImageIO.read(new File(imagePath));
+        } catch (IOException e) {
+            System.out.println("Error loading image: " + e.getMessage());
+            return null;
+        }
+    }
+
+    // Simulate feature extraction (simple object detection or feature detection)
+    public static List<String> extractImageFeatures(BufferedImage image) {
+        // For demonstration, we'll assume the image contains some predefined objects.
+        // In a real system, this part would use CNNs to extract features from the image.
+        
+        // For example, based on some pre-processed image features (like colors, edges, or objects), we detect these.
+        // Simulating detection of some objects (in reality, we would use a deep learning model for this)
+        List<String> objectsDetected = Arrays.asList("car", "road", "sky", "tree");
+        
+        return objectsDetected;
+    }
+
+    // Generate a caption based on the detected objects
+    public static String generateCaption(List<String> detectedObjects) {
+        // Simple rule-based approach to generate captions based on detected objects
+        StringBuilder caption = new StringBuilder("This image contains ");
+
+        for (int i = 0; i < detectedObjects.size(); i++) {
+            caption.append(detectedObjects.get(i));
+            if (i < detectedObjects.size() - 1) {
+                caption.append(", ");
+            } else {
+                caption.append(".");
+            }
+        }
+
+        return caption.toString();
+    }
+
+    // Display the image along with the generated caption
+    public static void displayImageWithCaption(BufferedImage image, String caption) {
+        // Set up a JFrame to display the image and caption
+        JFrame frame = new JFrame("Image Captioning");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(image.getWidth() + 20, image.getHeight() + 100);
+        frame.setLayout(new BorderLayout());
+
+        // Create a label to display the image
+        JLabel imageLabel = new JLabel(new ImageIcon(image));
+        frame.add(imageLabel, BorderLayout.CENTER);
+
+        // Create a label to display the caption
+        JLabel captionLabel = new JLabel(caption, JLabel.CENTER);
+        captionLabel.setFont(new Font("Arial", Font.PLAIN, 16));
+        frame.add(captionLabel, BorderLayout.SOUTH);
+
+        // Display the frame
+        frame.setVisible(true);
+    }
+}
